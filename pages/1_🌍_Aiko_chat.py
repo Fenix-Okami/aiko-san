@@ -11,7 +11,8 @@ from streamlit_chat import message
 from streamlit.components.v1 import html
 
 openai_api_key = st.sidebar.text_input('OpenAI API Key', type='password')
-voice_toggle = st.sidebar.toggle('Generate audio',value=False)
+voice_toggle = st.sidebar.toggle('Generate audio',value=False) 
+image_toggle = st.sidebar.toggle('Generate illustrations',value=False) 
 immersion_toggle = st.sidebar.toggle('Immersion mode',value=False)
 if immersion_toggle:
     immersion="The student wants a fully immersive experience, so ONLY respond in Japanese"
@@ -42,6 +43,26 @@ st.image('aiko.png', caption='愛子さん', width=300)
 def get_response(message):
     response=chat_model.predict(message)
     return response
+
+def get_image(prompt):
+     gpt_response = client.completions.create(
+            model="gpt-3.5-turbo-instruct",
+            prompt="""the following is the AI response from a chat. 
+            Take this prompt and output a different prompt, in english, to pass
+            to the DALL-E-3 text-to-image generator to create an appropriate illustration.
+            Add instructions to make the image output a handdrawn, anime style.
+            be as detailed as possible.
+            : """+ prompt
+            )
+     image_prompt=gpt_response.choices[0].text
+     response = client.images.generate(
+                model="dall-e-3",
+                prompt=image_prompt,
+                size="1024x1024",
+                quality="standard",
+                n=1,
+                )
+     return response.data[0].url
 
 def get_audio(message):
  
@@ -122,6 +143,10 @@ if prompt := st.chat_input("Ask Aiko"):
             message_placeholder.markdown(full_response + "▌")
         if voice_toggle:
             get_audio(full_response)
+        if image_toggle:
+            st.image(get_image(full_response))
+
+
         message_placeholder.markdown(full_response)
     st.session_state.messages.append({"role": "assistant", "content": full_response})
 
