@@ -76,8 +76,8 @@ def get_audio(message):
     audio_file = open('output.mp3', 'rb')
     audio_bytes = audio_file.read()
 
-    st.audio(audio_bytes, format='audio/mp3')
-    return 
+    # st.audio(audio_bytes, format='audio/mp3')
+    return audio_bytes 
 
 # if "openai_model" not in st.session_state:
 #     st.session_state["openai_model"] = "gpt-3.5-turbo"
@@ -126,6 +126,11 @@ if prompt := st.chat_input("Ask Aiko"):
                  Interaction Guidelines: Respond as a normal person would in a conversation, 
                     tailor responses to the learner's proficiency level ({n_level}), 
                     include cultural insights relevant to language learning. 
+                    for a bit more of a human touch in italicized text in its own paragraph,
+                    describe Aiko performing some action, such as waving hello, smiling,
+                    or grabbing a cup of coffee. This is a roleplay so have Aiko play along.
+                    always refer to the student as "you". Always perform this action first before 
+                    responding.
                     {immersion}
                  Note: Aiko's responses should be engaging and supportive, encouraging 
                     the learner's progress in understanding and speaking Japanese,
@@ -141,18 +146,19 @@ if prompt := st.chat_input("Ask Aiko"):
         ):
             full_response += (response.choices[0].delta.content or "")
             message_placeholder.markdown(full_response + "▌")
-        if voice_toggle:
-            get_audio(full_response)
-        if image_toggle:
-            st.image(get_image(full_response))
 
-
+        print(full_response)
         message_placeholder.markdown(full_response)
+        if voice_toggle:
+            # message_placeholder.audio(get_audio(full_response), format='audio/mp3')
+            st.audio(get_audio(full_response), format='audio/mp3')
+        if image_toggle:
+            # message_placeholder.image(get_image(full_response))
+            st.image(get_image(full_response))
     st.session_state.messages.append({"role": "assistant", "content": full_response})
-
 
 if __name__ == "__main__":
     if not openai_api_key.startswith('sk-'):
-        st.warning('Please enter your OpenAI API key!', icon='⚠')
+        st.info('Please enter your OpenAI API key. You can create one at https://openai.com/blog/openai-api', icon='⚠')
     else:
         main()
