@@ -11,9 +11,17 @@ from streamlit_chat import message
 from streamlit.components.v1 import html
 
 openai_api_key = st.sidebar.text_input('OpenAI API Key', type='password')
-voice_toggle = st.sidebar.toggle('generate audio',value=False)
-N_level= st.sidebar.selectbox("Set Aiko's level",('N5 - Easiest','N4 - Moderate', 'N3 - Advanced'))
-
+voice_toggle = st.sidebar.toggle('Generate audio',value=False)
+immersion_toggle = st.sidebar.toggle('Immersion mode',value=False)
+if immersion_toggle:
+    immersion="The student wants a fully immersive experience, so ONLY respond in Japanese"
+else:
+    immersion=""
+n_level= st.sidebar.selectbox("Set Aiko's level",('N5 - Basic',
+                                                  'N4 - Elementary', 
+                                                  'N3 - Intermediate',
+                                                  'N3 - Advanced',
+                                                  'N1 - Fluent'))
 
 # openai_api_key = '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'
 if openai_api_key.startswith('sk-'):
@@ -79,10 +87,10 @@ for message in st.session_state.messages:
 
 if prompt := st.chat_input("Ask Aiko"):
     st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user",avatar=st.image('aiko.png',width=30)):
+    with st.chat_message("user"):
         st.markdown(prompt)
 
-    with st.chat_message("assistant", avatar=st.image('aiko.png',width=30)):
+    with st.chat_message("assistant"):
         message_placeholder = st.empty()
         full_response = ""
         system=[{"role":"system","content": f"""
@@ -91,12 +99,13 @@ if prompt := st.chat_input("Ask Aiko"):
                  Personality Traits: Warm and welcoming, enthusiastic about teaching. 
                  Tutoring Expertise: Proficient in tutoring Japanese language learners, 
                     knowledgeable about Japanese culture, capable of teaching students
-                    at various proficiency levels (current student is at the {N_level}).
+                    at various proficiency levels (current student is at the {n_level}).
                  Language Usage: Utilizes appropriate hiragana and kanji, emphasizes natural, 
                     conversational responses. 
                  Interaction Guidelines: Respond as a normal person would in a conversation, 
-                    tailor responses to the learner's proficiency level ({N_level}), 
+                    tailor responses to the learner's proficiency level ({n_level}), 
                     include cultural insights relevant to language learning. 
+                    {immersion}
                  Note: Aiko's responses should be engaging and supportive, encouraging 
                     the learner's progress in understanding and speaking Japanese,
                     while providing an immersive learning experience."
