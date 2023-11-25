@@ -31,10 +31,11 @@ response_template= """
 """
 
 openai_api_key = st.sidebar.text_input('OpenAI API Key', type='password')
-voice_toggle = st.sidebar.toggle('Generate audio',value=False) 
-image_toggle = st.sidebar.toggle('Generate illustrations',value=False) 
-immersion_toggle = st.sidebar.toggle('Immersive mode',value=False)
-translation_toggle = st.sidebar.toggle('Include translation',value=False)
+translation_toggle = st.sidebar.toggle('Include translation',value=True)
+voice_toggle = st.sidebar.toggle('Generate audio (additional fees apply)',value=False) 
+image_toggle = st.sidebar.toggle('Generate illustrations (additional fees apply)',value=False) 
+# immersion_toggle = st.sidebar.toggle('Immersive mode',value=False)
+immersion_toggle = False
 if immersion_toggle:
     immersion="Aiko responds exclusively in Japanese, suitable for the user's JLPT level, to maximize immersion."
     response_lang="Japanese"
@@ -85,8 +86,8 @@ with right_co:
                 Her attire is casual yet stylish, blending seamlessly 
                 with the café's relaxed vibe. As she looks up, 
                 her eyes meet yours. 
-                A gentle, welcoming smile crosses her face, reflecting h
-                er eagerness to share her knowledge of language and culture. """)
+                A gentle, welcoming smile crosses her face, reflecting her 
+                eagerness to share her knowledge of language and culture. """)
 
 def num_tokens_from_string(string: str, encoding_name: str) -> int:
     """Returns the number of tokens in a text string."""
@@ -134,9 +135,7 @@ def num_tokens_from_messages(messages, model):
     num_tokens += 3  # every reply is primed with <|start|>assistant<|message|>
     return num_tokens
 
-try:
-    prompt_tokens
-except:
+if 'prompt_tokens' not in locals():
     prompt_tokens=0
     generated_tokens=0
     token_usage=0
@@ -307,6 +306,6 @@ def main():
 
 if __name__ == "__main__":
     if not openai_api_key.startswith('sk-'):
-        st.info('Please enter your OpenAI API key. You can create one at https://openai.com/blog/openai-api', icon='⚠')
+        st.info('Please enter your OpenAI API key on the left sidebar. You can create one at https://openai.com/blog/openai-api', icon='⚠')
     else:
         main()
