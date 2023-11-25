@@ -14,6 +14,22 @@ from streamlit.components.v1 import html
 
 import tiktoken
 
+left_co, right_co = st.columns(2)
+with left_co:
+    st.image('aiko.png', caption='愛子さん', width=300)
+with right_co:
+    st.markdown("""Seated in the cozy corner of a quaint café, 
+                Aiko fits perfectly into the warm, inviting ambiance. 
+                With black hair framing her thoughtful expression and 
+                brown eyes peering through glasses, she radiates a 
+                sense of quiet intellect. She's engrossed in a book of 
+                Japanese poetry, occasionally sipping green tea. 
+                Her attire is casual yet stylish, blending seamlessly 
+                with the café's relaxed vibe. As she looks up, 
+                her eyes meet yours. 
+                A gentle, welcoming smile crosses her face, reflecting h
+                er eagerness to share her knowledge of language and culture. """)
+
 def num_tokens_from_string(string: str, encoding_name: str) -> int:
     """Returns the number of tokens in a text string."""
     encoding = tiktoken.get_encoding(encoding_name)
@@ -72,9 +88,10 @@ voice_toggle = st.sidebar.toggle('Generate audio',value=False)
 image_toggle = st.sidebar.toggle('Generate illustrations',value=False) 
 immersion_toggle = st.sidebar.toggle('Immersion mode',value=False)
 if immersion_toggle:
-    immersion="The student wants a fully immersive experience, so ONLY respond in Japanese"
+    immersion="Aiko responds exclusively in Japanese, suitable for the user's JLPT level, \
+        to maximize immersion. English is used minimally, primarily for grammar explanations or when absolutely necessary."
 else:
-    immersion=""
+    immersion="Aiko uses a mix of Japanese and English, balancing between language practice and clear communication."
 n_level= st.sidebar.selectbox("Set Aiko's level",('N5 - Basic',
                                                   'N4 - Elementary', 
                                                   'N3 - Intermediate',
@@ -106,8 +123,6 @@ def on_input_change():
 def on_btn_click():
     del st.session_state.past[:]
     del st.session_state.generated[:]
-
-st.image('aiko.png', caption='愛子さん', width=300)
 
 def get_response(message):
     response=chat_model.predict(message)
@@ -175,27 +190,25 @@ def main():
             message_placeholder = st.empty()
             full_response = ""
             system=[{"role":"system","content": f"""
-                    Persona: Japanese Tutor - Aiko. 
-                    Background: A college student based in Tokyo. 
-                    Personality Traits: Warm and welcoming, enthusiastic about teaching. 
-                    Tutoring Expertise: Proficient in tutoring Japanese language learners, 
-                        knowledgeable about Japanese culture, capable of teaching students
-                        at various proficiency levels (current student is at the {n_level}).
-                    Language Usage: Utilizes appropriate hiragana and kanji, emphasizes natural, 
-                        conversational responses. 
-                    Interaction Guidelines: Respond as a normal person would in a conversation, 
-                        tailor responses to the learner's proficiency level ({n_level}), 
-                        include cultural insights relevant to language learning. 
-                        Always correct the student's grammar, and provide the explaination in english.
-                        For a bit more of a human touch use italicized text in its own paragraph,
-                        describe Aiko performing some action, such as waving hello, smiling,
-                        or grabbing a cup of coffee. This is a roleplay so have Aiko play along.
-                        always reference the user as "you" and never say "the student".
+                    Persona: assistant is Aiko, a Japanese Tutor
+                    Background: College student in Tokyo
+                    Personality Traits: Warm, welcoming, enthusiastic about teaching Japanese
+                    Tutoring Expertise: Skilled in tutoring Japanese language learners of 
+                        various proficiency levels, knowledgeable in Japanese culture
+                    Language Level: The current user is at JLPT level {n_level}, and knows English as their first language
+                    Language Usage: Use of appropriate hiragana, kanji, and conversational Japanese
+                    Interaction Style:
+                        ALWAYS write an initial paragraph with Aiko performing a contextually apropriate action in the third person and in ENGLISH (e.g., *Aiko smiles warmly, Aiko takes a sip of her tea, etc*) use italicized text and dedicate a paragraph to this.
                         Always perform this action first before responding.
+                        Always address the user directly as "you" in the first paragraph.
+                        Tailor ALL Japanese responses to the user's JLPT {n_level}, using simpler language for lower levels and gradually introducing complexity for higher levels.
+                        Integrate cultural insights relevant to the conversation topic, enhancing the immersive learning experience.
+                        ALWAYS Provide corrections to the user's Japanese grammar in a supportive manner, followed by clear explanations in ENGLISH.
+                        Encourage user engagement through questions and interactive dialogue.
                         {immersion}
-                    Note: Aiko's responses should be engaging and supportive, encouraging 
-                        the learner's progress in understanding and speaking Japanese,
-                        while providing an immersive learning experience."
+                    Objective: Aiko's responses should foster an engaging, supportive environment, 
+                        focusing on the user's progress in understanding and speaking Japanese. 
+                        The approach should be mindful of the user's proficiency level, ensuring not to overwhelm them.
                     """}]
             for response in client.chat.completions.create(
                                                         model=st.session_state["openai_model"],
@@ -223,10 +236,17 @@ def main():
         st.session_state.messages.append({"role": "assistant", "content": full_response})
 
         with st.sidebar:
+            cost=prompt_tokens/1000*.001+generated_tokens/1000*.002
+            max_context=4096
+            if gpt_model=='gpt-4':
+                cost=cost*30
+                max_context=max_context*2
             st.code(f"""
+                    --last response--
                     input: {prompt_tokens} tokens
                     output: {generated_tokens} tokens
-                    {token_usage}/8000 tokens in full context
+                    estimated cost: ${cost:.5f} dollars
+                    {token_usage}/{max_context} tokens in full context
                     """)
 
 
