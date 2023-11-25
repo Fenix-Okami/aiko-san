@@ -14,7 +14,7 @@ st.markdown(
     Streamlit is an open-source app framework built specifically for
     Machine Learning and Data Science projects.
     """)
-st.image("aiko.png")
+st.image("aiko_cover.png")
 st.markdown(  """ 
     ## Meet AIKO-san
     She is designed to support your journey in learning Japanese. Let's enjoy mastering the language with AIKO-san!
