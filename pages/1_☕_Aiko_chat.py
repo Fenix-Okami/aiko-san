@@ -8,26 +8,18 @@ import numpy as np
 # import other required libraries
 
 from streamlit.components.v1 import html
-
-from langchain.prompts import ChatPromptTemplate
-from langchain.output_parsers import ResponseSchema
-from langchain.output_parsers import StructuredOutputParser
-from langchain.schema import (
-    SystemMessage,
-    HumanMessage,
-    AIMessage
-)
+from PIL import Image
 
 import tiktoken
 
+image = Image.open('aiko.png')
 response_template= """
-  persona_and_goal: Aiko is a warm and welcoming college student from Tokyo, enthusiastic about teaching Japanese. She is skilled in tutoring learners of various proficiency levels and knowledgeable in Japanese culture. The goal is to provide engaging and supportive responses, fostering the user's understanding and speaking of Japanese. Responses should be tailored to the user's JLPT level {n_level}, incorporating cultural insights and language corrections in a friendly manner.
-  difficulty: JLPT {n_level}
+  persona_and_goal: Aiko is a warm and welcoming college student from Tokyo, enthusiastic about teaching Japanese. She is skilled in tutoring learners of various proficiency levels and knowledgeable in Japanese culture. The goal is to provide engaging and supportive responses, fostering the user's understanding and speaking of Japanese. You have been engaging with a student. Whenever he response in Japanese, they are practicing or making an attempt.
 
   Strictly respond in two parts in this order:
   "action": *italicized* text of a simple, relatable action performed by Aiko at the start of each response, described in {response_lang}. For example, *Aiko nods thoughtfully* or *Aiko gestures to a Japanese text*. This element sets the stage for a friendly and interactive learning environment. have this be its own paragraph.
 
-  "response": Aiko's main response to the user's query or statement. {immersion}. NEVER USE ROMANJI unless asked about hiragana and katakana. {translation}
+  "response": Aiko's main response to the user's query or statement. {difficulty}. NEVER USE ROMANJI. {translation}
 """
 
 openai_api_key = st.sidebar.text_input('OpenAI API Key', type='password')
@@ -47,11 +39,22 @@ if translation_toggle:
 else:
     translation="DO NOT simply provide a full English translation"
 
-n_level= st.sidebar.selectbox("Set Aiko's level",('N5 - Basic',
-                                                  'N4 - Elementary', 
-                                                  'N3 - Intermediate',
-                                                  'N3 - Advanced',
-                                                  'N1 - Fluent'))
+n_level = st.sidebar.selectbox("Set Aiko's difficulty", ('Absolute Beginner',
+                                                        'Basic', 
+                                                        'Intermediate',
+                                                        'Advanced',
+                                                        'Fluent'))
+def get_instructions(level):
+    instructions = {
+        'Absolute Beginner': "Use simple English predominantly, with very basic Japanese phrases interspersed. Focus on familiarizing the user with common expressions and encourage attempts at Japanese, while primarily explaining concepts in English for clarity.",
+        'Basic': "Balance English and Japanese in your responses. Include basic Japanese phrases with furigana. Offer explanations in English, but encourage the use of Japanese in conversation. Provide challenges in English and give feedback in a mix of both languages.",
+        'Intermediate': "Use Japanese primarily, but provide occasional explanations or check-ins in English. Include more complex grammar and vocabulary. Encourage the user to express themselves in Japanese, offering corrections and suggestions in a mix of English and Japanese.",
+        'Advanced': "Focus mainly on Japanese, using English only for complex explanations or when addressing misunderstandings. Emphasize advanced grammar and nuanced expressions. Encourage sophisticated conversation in Japanese, correcting subtle mistakes and providing feedback.",
+        'Fluent': "Conduct sessions almost entirely in Japanese. Use English minimally, primarily for clarifications. Focus on fluency, idiomatic expressions, and cultural nuances, engaging in advanced conversations and discussing complex topics in Japanese."
+    }
+    return instructions.get(level)
+
+
 gpt_model= st.sidebar.selectbox("Set GPT model",('gpt-4','gpt-3.5-turbo'),index=1)
 
 reset_button = st.sidebar.button("Reset Chat")
@@ -63,15 +66,6 @@ with st.sidebar:
 | gpt-3.5-turbo           | $0.001                  | $0.002                     |
              
 """)
-
-persona_and_guidelines="""persona_and_goal: Aiko is a warm and welcoming college student from Tokyo, enthusiastic about teaching Japanese. She is skilled in tutoring learners of various proficiency levels and knowledgeable in Japanese culture. The goal is to provide engaging and supportive responses, fostering the user's understanding and speaking of Japanese. Responses should be tailored to the user's JLPT level {n_level}, incorporating cultural insights and language corrections in a friendly manner.difficulty: JLPT {n_level}"""
-
-action_schema = ResponseSchema(name="action",
-                             description="A simple, relatable action performed by Aiko at the start of each response, described in {response_lang}. For example, 'Aiko nods thoughtfully' or 'Aiko gestures to a Japanese text'. This element sets the stage for a friendly and interactive learning environment.")
-response_schema = ResponseSchema(name="response",
-                                      description="Aiko's main response to the user's query or statement. {immerson}")
-explanation_schema = ResponseSchema(name="explanation",
-                                    description="An explanation and breakdown in {response_lang}, particularly focusing on any corrections to the user's Japanese grammar or language use. This part aims to provide clear and helpful insights to aid the user's learning, explaining language points or cultural references mentioned in the response.")
 
 left_co, right_co = st.columns(2)
 with left_co:
@@ -140,23 +134,9 @@ if 'prompt_tokens' not in locals():
     generated_tokens=0
     token_usage=0
 
-# openai_api_key = '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'
 if openai_api_key.startswith('sk-'):
     chat_model = ChatOpenAI(openai_api_key = openai_api_key)
     client = OpenAI(api_key = openai_api_key)
-
-def on_input_change():
-    user_input = st.session_state.user_input
-    st.session_state.past.append(user_input)
-    st.session_state.generated.append("The messages from Bot\nWith new line")
-
-def on_btn_click():
-    del st.session_state.past[:]
-    del st.session_state.generated[:]
-
-def get_response(message):
-    response=chat_model.predict(message)
-    return response
 
 def get_image(prompt):
      gpt_response = client.completions.create(
@@ -205,28 +185,6 @@ def main():
 
     if "messages" not in st.session_state:
         st.session_state.messages = []
-        # st.session_state.messages = [SystemMessage(content=response_template)]
-        # st.session_state.messages =[{"role":"system","content": f"""
-        #             Persona: assistant is Aiko, a Japanese Tutor
-        #             Background: College student in Tokyo
-        #             Personality Traits: Warm, welcoming, enthusiastic about teaching Japanese
-        #             Tutoring Expertise: Skilled in tutoring Japanese language learners of 
-        #                 various proficiency levels, knowledgeable in Japanese culture
-        #             Language Level: The current user is at JLPT level {n_level}, and knows English as their first language
-        #             Language Usage: Use of appropriate hiragana, kanji, and conversational Japanese
-        #             Interaction Style:
-        #                 ALWAYS write an initial paragraph with Aiko performing a contextually apropriate action in the third person and in ENGLISH (e.g., *Aiko smiles warmly, Aiko takes a sip of her tea, etc*) use italicized text and dedicate a paragraph to this.
-        #                 Always perform this action first before responding.
-        #                 Always address the user directly as "you" in the first paragraph.
-        #                 Tailor ALL Japanese responses to the user's JLPT {n_level}, using simpler language for lower levels and gradually introducing complexity for higher levels.
-        #                 Integrate cultural insights relevant to the conversation topic, enhancing the immersive learning experience.
-        #                 ALWAYS Provide corrections to the user's Japanese grammar in a supportive manner, followed by clear explanations in ENGLISH.
-        #                 Encourage user engagement through questions and interactive dialogue.
-        #                 {immersion}
-        #             Objective: Aiko's responses should foster an engaging, supportive environment, 
-        #                 focusing on the user's progress in understanding and speaking Japanese. 
-        #                 The approach should be mindful of the user's proficiency level, ensuring not to overwhelm them.
-        #             """}]
 
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
@@ -237,29 +195,11 @@ def main():
         with st.chat_message("user"):
             st.markdown(prompt)
 
-        # persona_and_guidelines.format(n_level=n_level)
-        # response_template.format(n_level=n_level,response_lang=response_lang,immersion=immersion)
-        
-        # response_schemas = [action_schema.format(response_lang=response_lang), 
-        #                     response_schema.format(immersion=immersion),
-        #                     explanation_schema.format(response_lang=response_lang)]
-        # output_parser = StructuredOutputParser.from_response_schemas(response_schemas)
-        # format_instructions = output_parser.get_format_instructions()
-
-        # prompt = ChatPromptTemplate.from_template(template=response_template)
-
-        # messages = prompt.format_messages(text=customer_review, 
-        #                                   format_instructions=format_instructions)
-        
-        # chat = ChatOpenAI(model=gpt_model)
-        system=[{"role":"system","content":response_template.format(n_level=n_level,response_lang=response_lang,immersion=immersion,translation=translation)}]
-        with st.chat_message("assistant"):
+        system=[{"role":"system","content":response_template.format(n_level=n_level,response_lang=response_lang,difficulty=get_instructions(n_level),translation=translation)}]
+        with st.chat_message("assistant",avatar=np.array(image)):
             message_placeholder = st.empty()
             full_response = ""
-            # with st.spinner("Thinking..."):
-            #     response = chat(st.session_state.messages)
-            #     st.session_state.messages.append(
-            #         AIMessage(content=response.content))
+
             for response in client.chat.completions.create(
                                                         model=st.session_state["openai_model"],
                                                         messages=system+[
@@ -270,7 +210,6 @@ def main():
                 full_response += (response.choices[0].delta.content or "")
                 message_placeholder.markdown(full_response + "▌")
                 
-            # output_dict = output_parser.parse(response.content)
             ###Track token usage for awareness
             messages =          system+[{"role": m["role"], "content": m["content"]} for m in st.session_state.messages]
             prompt_tokens =     num_tokens_from_messages(messages,gpt_model)
@@ -279,10 +218,8 @@ def main():
 
             message_placeholder.markdown(full_response)
             if voice_toggle:
-                # message_placeholder.audio(get_audio(full_response), format='audio/mp3')
                 st.audio(get_audio(full_response), format='audio/mp3')
             if image_toggle:
-                # message_placeholder.image(get_image(full_response))
                 st.image(get_image(full_response))
         st.session_state.messages.append({"role": "assistant", "content": full_response})
 
@@ -299,10 +236,6 @@ def main():
                     estimated cost: ${cost:.5f} dollars
                     {token_usage}/{max_context} tokens in full context
                     """)
-
-
-           
-
 
 if __name__ == "__main__":
     if not openai_api_key.startswith('sk-'):

@@ -25,7 +25,7 @@ persona_and_goal: You are Aiko. She is a warm and welcoming college
 student from Tokyo, enthusiastic about teaching Japanese. 
 She is skilled in tutoring learners of various proficiency
 levels and knowledgeable in Japanese culture. 
-NEVER use romanji anywhere. Always use kanji with furigana instead.
+NEVER use romanji anywhere. Always use kanji that you would find at JLPT {n_level}. 
 you are testing your student in this interaction, provide these items:
 
 question: challenge your student with a question with a difficulty similar to the JLPT {n_level}. Provide the instructions in english unless the difficulty is N3 or above
@@ -117,7 +117,7 @@ def main():
     generate_button = st.button("Generate question")
 
     if generate_button:
-        with st.spinner('Generating question...'):
+        with st.spinner('Aiko is feverently writing on the chalkboard...'):
             chat = ChatOpenAI(model=gpt_model,openai_api_key=openai_api_key)
             prompt = ChatPromptTemplate.from_template(template=response_template)
             messages = prompt.format_messages(n_level=n_level,
@@ -142,7 +142,7 @@ def main():
     check_button = st.button("Check")
     
     if check_button and answer_choice:
-        with st.spinner('Checking answer...'):
+        with st.spinner('Aiko is reviewing your response...'):
             chat = ChatOpenAI(model=gpt_model,openai_api_key=openai_api_key)
             prompt = ChatPromptTemplate.from_template(template=answer_template)
             if answer_choice=="I'm not sure":   
