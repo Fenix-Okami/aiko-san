@@ -1,34 +1,23 @@
 import streamlit as st
 
 st.set_page_config(
-    page_title="Welcome",
-    page_icon="👋",
+    page_title="AI-ko",
+    page_icon="🇯🇵",
 )
 
-st.write("# Welcome to Ray's Streamlit App! 👋")
+st.write("# AI-ko")
 
 st.sidebar.success("Select an app above.")
 
-st.markdown(
-    """
-    Streamlit is an open-source app framework built specifically for
-    Machine Learning and Data Science projects.
-    """)
-st.image("aiko_cover.png")
-st.markdown(  """ 
-    ## Meet AIKO-san
-    She is designed to support your journey in learning Japanese. Let's enjoy mastering the language with AIKO-san!
-    ### Features
-    - **Japanese Fundamentals**: Learn grammar, vocabulary, and kanji for JLPT N5 and N4 levels.
-    - **Interactive Conversations**: Engage in realistic dialogues to practice your Japanese.
-    - **Cultural Insights**: Gain a deeper understanding of Japanese culture and customs.
-
-    ### Getting Started
-    - **Choose 'Chat with Aiko'** in the sidebar to begin interacting in Japanese at your chosen JLPT N-level.
-    - Enhance your learning experience with **text-to-speech** and **text-to-image** features for dynamic illustrations and audio support.
-
-    #### Want to Learn More?
-    - For more details about this app, check out [streamlit.io](https://streamlit.io).
-    - If you have any questions, you can find the commuity in [community forums](https://discuss.streamlit.io).
+left_co, right_co = st.columns(2)
+with left_co:
+    st.image('aiko_cover.png', caption='愛子さん', width=300)
+with right_co:
+    st.markdown( """ 
+        ## Meet 愛子さん
+        She is designed to support your journey in learning Japanese!
+        ### Available interactions
+        - **☕ Aiko-chat**: Have a simple chat with her. she will try to be mindful of your current proficiency level. There are settings to add voice and illustrations
+        - **📖 Aiko-test**: Aiko will try her best to challenge you with questions on the fly, and provide detailed explanations. She can be a bit clumsy but she's doing her best!
 """
 )

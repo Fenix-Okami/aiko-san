@@ -46,11 +46,11 @@ student from Tokyo, enthusiastic about teaching Japanese.
 She is skilled in tutoring learners of various proficiency
 levels and knowledgeable in Japanese culture. 
 Your student just provided you an answer to a JLPT question. give a response how Aiko would. NEVER use romanji.
-primarily using english, provide explanations for each possible answer choice and the etymology of the kanji components if applicable. 
-start by restating what the question is asking for.
 If they are correct, start with "You got it!". 
 If they state they're unsure start with "That's alright. let's go through each of the options".
 Otherwise, start with "Not quite".
+Then, ALWAYS state what the question is asking for.
+Then, and AFTER stating what the question is asking for, primarily using english, provide explanations for each possible answer choice and the etymology of the kanji components if applicable. 
 always conclude with "let me know when you are ready for the next question":
 
 {response_instructions}
@@ -59,7 +59,7 @@ left_co, right_co = st.columns(2)
 with left_co:
     st.image('aiko_class.png', caption='愛子さん', width=300)
 with right_co:
-    st.markdown("""You are in a classroom""")
+    st.markdown("""*In the vibrantly decorated classroom, Aiko, sporting her black running jacket, exudes energy and spontaneity. Her black hair sways rhythmically as she darts back and forth, quickly scribbling Japanese language questions for you on the board. Her boundless energy reflects the lively pace of her teaching style. Her enthusiasm is infectious, transforming the learning environment into a dynamic and engaging space.*""")
 
 question_schema = ResponseSchema(name="question",
                              description=f"The JLPT question with a difficulty of N5")
@@ -129,14 +129,13 @@ def main():
                 f"A: {output_dict.get('A')}",
                 f"B: {output_dict.get('B')}",
                 f"C: {output_dict.get('C')}",
-                f"D: {output_dict.get('D')}",
-                f"E: I'm not sure"
+                f"D: {output_dict.get('D')}"
             ]
             st.session_state.choices = choices
     
     st.markdown(st.session_state.question)
     if 'choices' in st.session_state and st.session_state.choices:
-        answer_choice = st.radio("Pick one", st.session_state.choices, key='answer_choice')
+        answer_choice = st.radio("Pick one", st.session_state.choices+["I'm not sure"], key='answer_choice')
     else:
         answer_choice = None
 
@@ -146,7 +145,7 @@ def main():
         with st.spinner('Checking answer...'):
             chat = ChatOpenAI(model=gpt_model,openai_api_key=openai_api_key)
             prompt = ChatPromptTemplate.from_template(template=answer_template)
-            if answer_choice=="E: I'm not sure":   
+            if answer_choice=="I'm not sure":   
                 response_instructions="I'm not sure what is the answer to {question}. Can you walk me through each choice? {choices}?".format(question=st.session_state.question,
                                                                                                                                               choices=st.session_state.choices)
             else:

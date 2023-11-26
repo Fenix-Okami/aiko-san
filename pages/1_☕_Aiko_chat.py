@@ -77,7 +77,7 @@ left_co, right_co = st.columns(2)
 with left_co:
     st.image('aiko.png', caption='愛子さん', width=300)
 with right_co:
-    st.markdown("""Seated in the cozy corner of a quaint café, 
+    st.markdown("""*Seated in the cozy corner of a quaint café, 
                 Aiko fits perfectly into the warm, inviting ambiance. 
                 With black hair framing her thoughtful expression and 
                 brown eyes peering through glasses, she radiates a 
@@ -87,7 +87,7 @@ with right_co:
                 with the café's relaxed vibe. As she looks up, 
                 her eyes meet yours. 
                 A gentle, welcoming smile crosses her face, reflecting her 
-                eagerness to share her knowledge of language and culture. """)
+                eagerness to share her knowledge of language and culture.* """)
 
 def num_tokens_from_string(string: str, encoding_name: str) -> int:
     """Returns the number of tokens in a text string."""
